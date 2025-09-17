@@ -1,0 +1,29 @@
+.color-picker-container {
+    margin-bottom: 20px;
+}
+.section-title {
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    margin-top: 30px;
+}
+.preview-box {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+}
+.card {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+.bi {
+    transition: transform 0.3s;
+}
+.card:hover .bi {
+    transform: scale(1.2);
+}

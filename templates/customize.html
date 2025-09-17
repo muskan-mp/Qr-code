@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize QR Code</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5.5.2/dist/iro.min.js"></script>
+    <style>
+        .color-picker-container {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            margin-top: 30px;
+        }
+        .preview-box {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+        .form-range {
+            width: 100%;
+        }
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>9
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">QR Generator</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h1>Customize Your QR Code</h1>
+                
+                <form method="POST" action="{{ url_for('preview') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="qr_type" value="{{ qr_type }}">
+                    
+                    <!-- Content Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">QR Code Content</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if qr_type == 'url' %}
+                            <div class="mb-3">
+                                <label class="form-label">URL</label>
+                                <input type="url" class="form-control" name="content" placeholder="https://example.com" required>
+                            </div>
+                            {% elif qr_type == 'text' %}
+                            <div class="mb-3">
+                                <label class="form-label">Text Content</label>
+                                <textarea class="form-control" name="content" rows="3" placeholder="Enter your text here" required></textarea>
+                            </div>
+                            {% elif qr_type == 'phone' %}
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="content" placeholder="+1234567890" required>
+                            </div>
+                            {% elif qr_type == 'multilink' %}
+                            <div class="mb-3">
+                                <label class="form-label">Multi-Link JSON</label>
+                                <textarea class="form-control" name="content" rows="5" placeholder='{"links": [{"title": "Website", "url": "https://example.com"}, {"title": "Instagram", "url": "https://instagram.com/yourprofile"}]}' required></textarea>
+                                <div class="form-text">Enter JSON format for multi-link QR code</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Colors & Styling Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Colors & Styling</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Foreground Color</label>
+                                        <div id="fgColorPicker" class="color-picker-container"></div>
+                                        <input type="hidden" name="fg_color" id="fgColor" value="#000000">
+                                        <div class="color-preview" id="fgColorPreview" style="background-color: #000000;"></div>
+                                        <span id="fgColorValue">#000000</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Background Color</label>
+                                        <div id="bgColorPicker" class="color-picker-container"></div>
+                                        <input type="hidden" name="bg_color" id="bgColor" value="#ffffff">
+                                        <div class="color-preview" id="bgColorPreview" style="background-color: #ffffff;"></div>
+                                        <span id="bgColorValue">#ffffff</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="transparent_bg" id="transparentBg">
+                                <label class="form-check-label" for="transparentBg">Transparent Background</label>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Gradient Type</label>
+                                <select class="form-select" name="gradient_type" id="gradientType">
+                                    <option value="none">No Gradient</option>
+                                    <option value="linear">Linear Gradient</option>
+                                    <option value="radial">Radial Gradient</option>
+                                </select>
+                            </div>
+                            
+                            <div id="gradientOptions" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Gradient Start Color</label>
+                                            <div id="gradientStartPicker" class="color-picker-container"></div>
+                                            <input type="hidden" name="gradient_start" id="gradientStart" value="#000000">
+                                            <div class="color-preview" id="gradientStartPreview" style="background-color: #000000;"></div>
+                                            <span id="gradientStartValue">#000000</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Gradient End Color</label>
+                                            <div id="gradientEndPicker" class="color-picker-container"></div>
+                                            <input type="hidden" name="gradient_end" id="gradientEnd" value="#ffffff">
+                                            <div class="color-preview" id="gradientEndPreview" style="background-color: #ffffff;"></div>
+                                            <span id="gradientEndValue">#ffffff</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Shapes & Patterns Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Shapes & Patterns</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Dot Shape</label>
+                                <select class="form-select" name="dot_shape">
+                                    <option value="square">Square</option>
+                                    <option value="circle">Circle</option>
+                                    <option value="rounded">Rounded</option>
+                                    <option value="vertical">Vertical Bars</option>
+                                    <option value="horizontal">Horizontal Bars</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Eye Shape</label>
+                                <select class="form-select" name="eye_shape">
+                                    <option value="square">Square</option>
+                                    <option value="circle">Circle</option>
+                                    <option value="rounded">Rounded</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="random_pattern" id="randomPattern">
+                                <label class="form-check-label" for="randomPattern">Random Pattern Mode</label>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Inner Eye Color</label>
+                                        <div id="innerEyeColorPicker" class="color-picker-container"></div>
+                                        <input type="hidden" name="inner_eye_color" id="innerEyeColor" value="#000000">
+                                        <div class="color-preview" id="innerEyeColorPreview" style="background-color: #000000;"></div>
+                                        <span id="innerEyeColorValue">#000000</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Outer Eye Color</label>
+                                        <div id="outerEyeColorPicker" class="color-picker-container"></div>
+                                        <input type="hidden" name="outer_eye_color" id="outerEyeColor" value="#000000">
+                                        <div class="color-preview" id="outerEyeColorPreview" style="background-color: #000000;"></div>
+                                        <span id="outerEyeColorValue">#000000</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="eye_glow" id="eyeGlow">
+                                <label class="form-check-label" for="eyeGlow">Add Eye Glow Effect</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Logo & Branding Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Logo & Branding</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Logo Upload (PNG/JPG)</label>
+                                <input type="file" class="form-control" name="logo" accept=".png,.jpg,.jpeg" id="logoUpload">
+                                <div class="form-text">Recommended size: 100-300px square with transparent background</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Logo Size</label>
+                                <input type="range" class="form-range" name="logo_size" min="5" max="30" value="20" id="logoSize">
+                                <div class="form-text" id="logoSizeValue">20%</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Logo Position</label>
+                                <select class="form-select" name="logo_position">
+                                    <option value="center">Center</option>
+                                    <option value="top-left">Top Left</option>
+                                    <option value="top-right">Top Right</option>
+                                    <option value="bottom-left">Bottom Left</option>
+                                    <option value="bottom-right">Bottom Right</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Logo Frame Style</label>
+                                <select class="form-select" name="logo_frame_style">
+                                    <option value="none">No Frame</option>
+                                    <option value="circle">Circle</option>
+                                    <option value="square">Square</option>
+                                    <option value="rounded">Rounded Square</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Logo Text</label>
+                                <input type="text" class="form-control" name="logo_text" placeholder="Brand name or CTA">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg">Preview QR Code</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg ms-2">Back to Home</a>
+                </form>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="preview-box">
+                    <h3>Live Preview</h3>
+                    <div class="text-center mt-4">
+                        <div id="qrPreview" style="width: 100%; height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                            <p class="text-muted">Preview will appear here</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Design Tips</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Combine gradient + logo + animated glow for premium look</li>
+                            <li class="list-group-item">Use metallic gradients for luxury appearance</li>
+                            <li class="list-group-item">Transparent backgrounds work well on images</li>
+                            <li class="list-group-item">Split styles create unique visual interest</li>
+                            <li class="list-group-item">Test with multiple devices before finalizing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Handle gradient type selection
+        document.getElementById('gradientType').addEventListener('change', function() {
+            const gradientOptions = document.getElementById('gradientOptions');
+            gradientOptions.style.display = this.value === 'none' ? 'none' : 'block';
+            updatePreview();
+        });
+        
+        // Initialize color pickers
+        const colorPickers = [
+            { id: 'fgColorPicker', input: 'fgColor', preview: 'fgColorPreview', value: 'fgColorValue', color: '#000000' },
+            { id: 'bgColorPicker', input: 'bgColor', preview: 'bgColorPreview', value: 'bgColorValue', color: '#ffffff' },
+            { id: 'gradientStartPicker', input: 'gradientStart', preview: 'gradientStartPreview', value: 'gradientStartValue', color: '#000000' },
+            { id: 'gradientEndPicker', input: 'gradientEnd', preview: 'gradientEndPreview', value: 'gradientEndValue', color: '#ffffff' },
+            { id: 'innerEyeColorPicker', input: 'innerEyeColor', preview: 'innerEyeColorPreview', value: 'innerEyeColorValue', color: '#000000' },
+            { id: 'outerEyeColorPicker', input: 'outerEyeColor', preview: 'outerEyeColorPreview', value: 'outerEyeColorValue', color: '#000000' }
+        ];
+        
+        colorPickers.forEach(picker => {
+            const colorPicker = new iro.ColorPicker(`#${picker.id}`, {
+                width: 180,
+                color: picker.color,
+                sliderSize: 15,
+                sliderMargin: 10
+            });
+            
+            colorPicker.on('color:change', function(color) {
+                document.getElementById(picker.input).value = color.hexString;
+                document.getElementById(picker.preview).style.backgroundColor = color.hexString;
+                document.getElementById(picker.value).textContent = color.hexString;
+                updatePreview();
+            });
+        });
+        
+        // Update logo size value display
+        const logoSizeSlider = document.getElementById('logoSize');
+        const logoSizeValue = document.getElementById('logoSizeValue');
+        
+        logoSizeSlider.addEventListener('input', function() {
+            logoSizeValue.textContent = `${this.value}%`;
+            updatePreview();
+        });
+        
+        // Handle transparent background checkbox
+        document.getElementById('transparentBg').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('bgColorPreview').style.backgroundImage = 'linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)';
+                document.getElementById('bgColorPreview').style.backgroundSize = '20px 20px';
+                document.getElementById('bgColorPreview').style.backgroundPosition = '0 0, 0 10px, 10px -10px, -10px 0px';
+            } else {
+                document.getElementById('bgColorPreview').style.backgroundImage = 'none';
+                document.getElementById('bgColorPreview').style.backgroundColor = document.getElementById('bgColor').value;
+            }
+            updatePreview();
+        });
+        
+        // Update preview when options change
+        function updatePreview() {
+            // This would normally make an AJAX call to generate a preview
+            // For this example, we'll just simulate it
+            const previewBox = document.getElementById('qrPreview');
+            previewBox.innerHTML = '<p class="text-muted">Generating preview...</p>';
+            
+            // Simulate preview generation
+            setTimeout(() => {
+                previewBox.innerHTML = `
+                    <div class="text-center">
+                        <div style="width: 200px; height: 200px; background-color: ${document.getElementById('bgColor').value}; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #ddd;">
+                            <div style="font-size: 12px; color: ${document.getElementById('fgColor').value};">QR Code Preview</div>
+                        </div>
+                        <p class="mt-2 small">This is a simulated preview</p>
+                    </div>
+                `;
+            }, 500);
+        }
+        
+        // Initialize the preview
+        updatePreview();
+    </script>
+</body>
+</html>

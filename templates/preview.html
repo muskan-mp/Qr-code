@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview QR Code</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">QR Generator</a>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center">Your QR Code Preview</h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="data:image/png;base64,{{ img_data }}" alt="QR Code" class="img-fluid mb-4" style="max-width: 300px;">
+                        
+                        <div class="d-flex justify-content-center gap-2">
+                            <form method="POST" action="{{ url_for('download') }}" enctype="multipart/form-data">
+                                <!-- Hidden fields to preserve all options -->
+                                <input type="hidden" name="qr_type" value="{{ qr_type }}">
+                                <input type="hidden" name="content" value="{{ content }}">
+                                <input type="hidden" name="fg_color" value="{{ options.fg_color }}">
+                                <input type="hidden" name="bg_color" value="{{ options.bg_color }}">
+                                <input type="hidden" name="transparent_bg" value="{{ options.transparent_bg }}">
+                                <input type="hidden" name="dot_shape" value="{{ options.dot_shape }}">
+                                <input type="hidden" name="eye_shape" value="{{ options.eye_shape }}">
+                                <input type="hidden" name="gradient_type" value="{{ options.gradient_type }}">
+                                <input type="hidden" name="gradient_start" value="{{ options.gradient_start }}">
+                                <input type="hidden" name="gradient_end" value="{{ options.gradient_end }}">
+                                <input type="hidden" name="inner_eye_color" value="{{ options.inner_eye_color }}">
+                                <input type="hidden" name="outer_eye_color" value="{{ options.outer_eye_color }}">
+                                <input type="hidden" name="random_pattern" value="{{ options.random_pattern }}">
+                                <input type="hidden" name="eye_glow" value="{{ options.eye_glow }}">
+                                <input type="hidden" name="logo_size" value="{{ options.logo_size }}">
+                                <input type="hidden" name="logo_position" value="{{ options.logo_position }}">
+                                <input type="hidden" name="logo_frame_style" value="{{ options.logo_frame_style }}">
+                                <input type="hidden" name="logo_text" value="{{ options.logo_text }}">
+                                
+                                <button type="submit" class="btn btn-primary btn-lg">Download QR Code</button>
+                            </form>
+                            
+                            <a href="{{ url_for('customize', qr_type=qr_type) }}" class="btn btn-outline-secondary btn-lg">Edit Again</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
